@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 from __future__ import print_function
 
@@ -6,6 +6,22 @@ import numpy
 
 class PbReader(object):
     PBHMagic = 0xffffff98
+
+    ## .pb file format:
+    ##  int32  PBHMagic constant    (Can be used to determine the file's byte order)
+    ##  int32  dataoff -- file offset of first point data record
+    ##  int32  nfields -- number of attributes
+
+    ##  then follows <nfields> attribute names, each followed by a \x00 byte
+    ##  There may be additional data, e.g. comments, following the <nfields>'th attribute name
+
+    ## Then, at file offset dataoff, is a sequence of point data records.
+    ## Each point data record is 4*(1+3+nfields) bytes long:
+    ##    int32  point-identifier.   This may be wasted space, but it's defined as part of the .pb format.
+    ##    float32 * 3   X Y Z position
+    ##    float32 * <nfields>  zero or more attributes for this point
+
+    ## The format doesn't specify any sort of point count. The sequence of point data ends at the end of the file.
 
     def __init__(self, infname):
         self.infname = infname
@@ -170,7 +186,7 @@ if __name__ == "__main__":
     # spherical coordinates
     npts = len(thetas) * len(phis)
     xyz = numpy.zeros( shape=(npts, 3) )		  # particle positions
-    ids = numpy.zeros( shape=(npts,), dtype=numpy.int )   # integer particle ids, even though we don't need them here
+    ids = numpy.zeros( shape=(npts,), dtype=int )   # integer particle ids, even though we don't need them here
     attrs = numpy.zeros( shape=(npts, 4) )		  # particle attributes
 
     attrnames = ['theta', 'phi', 'simplefunc', 'wildfunc']
